@@ -27,7 +27,7 @@ def home():
 
 @app.route("/about")
 def about():
-    return render_template('about.html', title = 'About Page')
+    return render_template('about.html', title='About Page')
 
 # export FLASK_APP=blog-app.py
 # export FLASK_DEBUG=on

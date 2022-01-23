@@ -88,3 +88,8 @@ a.article-title:hover {
     /*author name color --> default is blue*/
     color: #444444;
 }
+
+.text-muted {
+    font-size: 14px;
+    color: #5f8a71;
+}
