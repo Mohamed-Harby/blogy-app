@@ -7,11 +7,19 @@ create table user
 (
     id       int auto_increment,
     username varchar(20) not null,
-    email    varchar(20) not null,
+    email    varchar(100) not null,
     password varchar(30) not null,
     photo    blob,
     primary key (id)
 );
+#
+# select *
+# from user;
+#
+# insert into user
+# values (0, 'mena', 'mean@h.com', 'programming', null)
+# insert into post
+# values (0, '14', 'my post', 'programming')
 
 create table post
 (

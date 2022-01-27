@@ -1,3 +1,4 @@
+import forms
 from flask import Flask, render_template, url_for, flash, redirect
 from forms import RegistrationForm, LoginForm
 from mysql.connector import connect
@@ -24,6 +25,18 @@ def db(sqlquery):
 
 def create_user(user_name, email, password):
     return db(f"insert into user values(0, '{user_name}', '{email}', '{password}', null)")
+
+
+def get_user(email, password):
+    return db(f"select * from user where email='{email}' and password='{password}'")
+
+
+def get_user_by_user_name(user_name):
+    return db(f"select * from user where username='{user_name}'")
+
+
+def get_user_by_user_email(email):
+    return db(f"select * from user where email='{email}'")
 
 
 def update_profile_photo(photo, user_id):
@@ -121,9 +134,22 @@ def about():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        flash(f'Account for {form.username.data} is created!', 'success')
-        # add database verifications here
-        return redirect(url_for('home'))
+        # database verifications here
+        user_name = form.username.data
+        email = form.email.data
+        password = form.password.data
+
+        similar_username = get_user_by_user_name(user_name)
+        similar_email = get_user_by_user_email(email)
+
+        if similar_username:
+            flash(f'{user_name} is already taken', 'danger')
+        elif similar_email:
+            flash(f'{email} is already taken', 'danger')
+        else:
+            create_user(user_name, email, password)
+            flash(f'Account for {form.username.data} is created!', 'success')
+            return redirect(url_for('home'))
     return render_template('register.html', title='registration page', form=form)
 
 
@@ -131,9 +157,15 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        # add database verifications here
-        flash(f'Welcome {form.email.data}!', 'success')
-        return redirect(url_for('home'))
+        email = form.email.data
+        password = form.password.data
+        user = get_user(email, password)
+        print(user)
+        if not user:
+            flash(f'Unsuccessful attempt. Check your email and password', 'danger')
+        else:
+            flash(f'Welcome {form.email.data}!', 'success')
+            return redirect(url_for('home'))
     return render_template('login.html', title='login Page', form=form)
 
 
