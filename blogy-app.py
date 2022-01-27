@@ -1,9 +1,75 @@
 from flask import Flask, render_template, url_for, flash, redirect
 from forms import RegistrationForm, LoginForm
+from mysql.connector import connect
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'e09baada403749a37849125116b7ac4e0d47b706'
+
+
 # secret key is used for protections against cross sites requests and modifying cookies.
+
+
+def db(sqlquery):
+    con = connect(host='localhost',
+                  database='blogy',
+                  user='root',
+                  password='root')
+    cur = con.cursor()
+    cur.execute(sqlquery)
+    records = cur.fetchall()
+    con.commit()
+    con.close()
+    return records
+
+
+def create_user(user_name, email, password):
+    return db(f"insert into user values(0, '{user_name}', '{email}', '{password}', null)")
+
+
+def update_profile_photo(photo, user_id):
+    return db(f"update user set photo='{photo}' where user_id={user_id}")
+
+
+def create_post(user_id, title, content, visibility):
+    return db(f"insert into post values(0, {user_id}, '{title}', '{content}', 0, 0, 0, '{visibility}', now())")
+
+
+def react(user_id, post_id, emotion):
+    if emotion == 'idea':
+        db(f"update post set idea_emotion = idea_emotion + 1 where id={post_id}")
+    elif emotion == 'like':
+        db(f"update post set like_emotion = like_emotion + 1 where id={post_id}")
+    elif emotion == 'dislike':
+        db(f"update post set dislike_emotion = dislike_emotion + 1 where id={post_id}")
+
+    return db(f"insert into emotion values({user_id}, {post_id}, '{emotion}')")
+
+
+def get_all_posts():
+    return db(f"select * from post")
+
+
+def get_user_posts(user_id):
+    return db(f"select * from post where user_id={user_id}")
+
+
+def add_friend(user_id, friend_id):
+    return db(f"insert into friendship values({user_id}, {friend_id})"), db(
+        f"insert into friendship values({friend_id}, {user_id})")
+
+
+def get_friends(user_id):
+    db(f"select second_friend_id from friendship where first_friend_id={user_id}")
+
+
+def get_friends_posts(friend_id):
+    return db(f"select * from post where user_id={friend_id}")
+
+
+def get_posts_by_trending():
+    return db(f"select * from post where visibility='public' order by idea_emotion + like_emotion + dislike_emotion desc")
+
+
 posts = [
     {
         'author': 'Mohamed Harby',
@@ -75,4 +141,7 @@ def login():
 # export FLASK_DEBUG=on
 
 if __name__ == '__main__':
+    # create_user('moharby', 'mo@2.com', '123')
+    # create_post(1, 'life', 'life is a game', 'public')
     app.run(debug=True)
+
